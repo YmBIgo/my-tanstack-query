@@ -1,23 +1,12 @@
 import * as React from "react";
-import {Observer} from "./my-tanstack/observer";
+import {useQuery} from "./my-tanstack/hooks/useQuery"
 import axios from "axios";
 
 export const App = () => {
   const [todoId, setTodoId] = React.useState<number>(1);
-  const [observer] = React.useState(() => new Observer<any, any>(`hoge${todoId}`, () => {
+  const {result} = useQuery(`hoge${todoId}`, () => {
     return axios.get(`https://jsonplaceholder.typicode.com/todos/${todoId}`).then(res => res.data);
-   }, 3, 3000));
-   const result = React.useSyncExternalStore(
-      React.useCallback(
-      (onStoreChange) => {
-        const unsubscribe = observer.subscribe(onStoreChange);
-        observer.createResult();
-        return unsubscribe
-      }
-    , [observer, todoId]),
-    () => observer.getCurrentResult(),
-    () => observer.getCurrentResult(),
-  )
+   }, 3, 3000);
   const onClickIncrement = async() => {
     setTodoId(todoId+1);
   }
@@ -25,11 +14,6 @@ export const App = () => {
     if (todoId === 1) return;
     setTodoId(todoId-1);
   }
-  React.useEffect(() => {
-    observer.setOptions(`hoge${todoId}`, () => {
-      return axios.get(`https://jsonplaceholder.typicode.com/todos/${todoId}`).then(res => res.data);
-     }, 3, 3000)
-  }, [todoId])
   if (result?.isLoading) {
     return (
       <p>Loading...</p>
